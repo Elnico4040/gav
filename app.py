@@ -1,12 +1,15 @@
-from flask import Flask, request, render_template_string
+# app.py
+from flask import Flask, request, render_template
 import re
 from datetime import datetime
 import PyPDF2
 import io
+from jinja2 import Environment
+
 
 app = Flask(__name__)
 
-# Fonctions utilitaires (extraites du code Streamlit)
+# Fonctions utilitaires (inchangées)
 def extract_text_from_pdf(file):
     reader = PyPDF2.PdfReader(file)
     text = ""
@@ -14,17 +17,15 @@ def extract_text_from_pdf(file):
         page_text = page.extract_text()
         if page_text:
             text += " " + page_text
-    text = text.replace("'", "")  # Supprimer les apostrophes
+    text = text.replace("'", "")
     text = re.sub(r"\s+", " ", text)
     return text
 
 def extract_time_ranges(text):
     pattern = r"Du (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)? au (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)?"
     matches = re.findall(pattern, text, re.IGNORECASE)
-    mois_map = {
-        "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
-        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
-    }
+    mois_map = {"janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
+        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12}
     results = []
     for d1, mois1, y1, h1, m1, d2, mois2, y2, h2, m2 in matches:
         try:
@@ -38,10 +39,8 @@ def extract_time_ranges(text):
 def extract_start_guard_time(text):
     pattern = r"Cette mesure prend effet le (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)?"
     match = re.search(pattern, text, re.IGNORECASE)
-    mois_map = {
-        "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
-        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
-    }
+    mois_map = {"janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
+        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12}
     if match:
         d, m, y, h, mn = match.groups()
         try:
@@ -53,10 +52,8 @@ def extract_start_guard_time(text):
 def extract_end_guard_time(text):
     pattern = r"Le (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)?, il est mis fin à la garde à vue"
     match = re.search(pattern, text, re.IGNORECASE)
-    mois_map = {
-        "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
-        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
-    }
+    mois_map = {"janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
+        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12}
     if match:
         d, m, y, h, mn = match.groups()
         try:
@@ -89,25 +86,19 @@ def verification(intervals):
             return 0
     return 1
 
-# Page HTML avec formulaire
-HTML_TEMPLATE = """
-<!doctype html>
-<title>Vérification Horaires GAV</title>
-<h2>📤 Déposez un fichier PDF</h2>
-<form method=post enctype=multipart/form-data>
-  <input type=file name=file accept=application/pdf>
-  <input type=submit value=Analyser>
-</form>
-<hr>
-{% if result %}
-    <h3>Résultat</h3>
-    {{ result|safe }}
-{% endif %}
-"""
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = ""
+    start_guard = None
+    end_guard = None
+    intervals = []
+    period_titles = []
+    verif1 = 0
+    verif2 = 0
+    global_verif = 0
+    hours = minutes = hours2 = minutes2 = 0
+    verif_intervals = []  # <-- liste de booléens de vérification horaire entre chaque intervalle
+
     if request.method == "POST":
         file = request.files.get("file")
         if file:
@@ -120,42 +111,42 @@ def index():
             verif1 = verification(intervals)
 
             if not intervals or not start_guard or not end_guard:
-                result = f"<p style='color:red;'>Erreur : données incomplètes ou texte mal lu lolilo {text} .</p>"
+                result = "<p style='color:red;'>Erreur : données incomplètes ou texte mal lu.</p>"
             else:
-                # Théorique
                 theorique_total = (intervals[-1][1] - intervals[0][0]).total_seconds()
                 hours = int(theorique_total // 3600)
                 minutes = int((theorique_total % 3600) // 60)
 
-                # Effectif
                 total_seconds = int((end_guard - start_guard).total_seconds())
                 hours2 = total_seconds // 3600
                 minutes2 = (total_seconds % 3600) // 60
 
                 verif2 = 1 if (hours == hours2 and minutes == minutes2) else 0
-
                 global_verif = verif1 and verif2
 
-                result += f"""
-                <p><strong>Début :</strong> {start_guard.strftime('%d/%m/%Y %H:%M')}</p>
-                <p><strong>Fin :</strong> {end_guard.strftime('%d/%m/%Y %H:%M')}</p>
-                <p><strong>Durée mesurée :</strong> {hours2}h {minutes2}m</p>
-                <p><strong>Durée théorique :</strong> {hours}h {minutes}m</p>
-                <p style="color:{'green' if verif2 else 'red'};"><strong>{"✔️ Temps OK" if verif2 else "❌ Temps incohérent"}</strong></p>
-                <p style="color:{'green' if verif1 else 'red'};"><strong>{"✔️ Horaires cohérents" if verif1 else "❌ Incohérence horaires"}</strong></p>
-                <p style="color:{'green' if global_verif else 'red'};"><strong>{"✔️ Aucun problème détecté" if global_verif else "❌ Problèmes détectés"}</strong></p>
-                <h4>Horaires extraits :</h4>
-                <ul>
-                {''.join([f"<li>Du {start.strftime('%d/%m/%Y %H:%M')} au {end.strftime('%d/%m/%Y %H:%M')}</li>" for start, end in intervals])}
-                </ul>
-                <h4>Cahier de GAV :</h4>
-                <ul>
-                {''.join([f"<li>{line}</li>" for line in period_titles])}
-                </ul>
-                """
-
-    return render_template_string(HTML_TEMPLATE, result=result)
+                # Calcul de la vérification horaire entre chaque intervalle (heure par heure)
+                verif_intervals = []
+                for i in range(len(intervals)):
+                    if i == 0:
+                        verif_intervals.append(True)  # Premier intervalle considéré OK
+                    else:
+                        prev_end = intervals[i-1][1]
+                        current_start = intervals[i][0]
+                        verif_intervals.append(prev_end == current_start)
+    return render_template("index.html",
+                           result=result,
+                           start_guard=start_guard,
+                           end_guard=end_guard,
+                           hours=hours,
+                           minutes=minutes,
+                           hours2=hours2,
+                           minutes2=minutes2,
+                           verif1=verif1,
+                           verif2=verif2,
+                           global_verif=global_verif,
+                           intervals=intervals,
+                           period_titles=period_titles,
+                           verif_intervals=verif_intervals)
 
 if __name__ == "__main__":
     app.run(debug=True)
-
