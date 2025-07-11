@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérification des horaires</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+        }
+        .box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .ok {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .upload-form {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>🕒 Vérification de la continuité des horaires</h1>
+
+    <form class="upload-form" action="/" method="post" enctype="multipart/form-data">
+        <label for="file">📤 Déposez un fichier PDF :</label>
+        <input type="file" name="file" required>
+        <button type="submit">Analyser</button>
+    </form>
+
+    {% if result %}
+    <div class="container">
+        <div class="box">
+            <h2>🕒 Horaires extraits</h2>
+            <ul>
+                {% for start, end in result %}
+                    <li>Du {{ start.strftime('%d/%m/%Y %H:%M') }} au {{ end.strftime('%d/%m/%Y %H:%M') }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="box">
+            <h2>✔️ Vérification horaire par horaire</h2>
+            <ul>
+                {% for message in horaires_verification %}
+                    {% if '❌' in message %}
+                        <li class="error">{{ message }}</li>
+                    {% else %}
+                        <li class="ok">{{ message }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>
