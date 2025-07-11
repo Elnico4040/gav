@@ -1,82 +1,154 @@
-<!DOCTYPE html>
-<html lang="fr">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Vérification des horaires</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-        }
-        .container {
-            display: flex;
-            gap: 40px;
-        }
-        .box {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            flex: 1;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .ok {
-            color: green;
-        }
-        .error {
-            color: red;
-        }
-        ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        li {
-            margin-bottom: 8px;
-        }
-        .upload-form {
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Vérification Horaires GAV</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f7f7f7;
+      color: #333;
+    }
+    h2, h3, h4 {
+      color: #2c3e50;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input[type="submit"] {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #2980b9;
+    }
+    .result {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    li {
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+    .right p, .left p {
+      margin: 6px 0;
+      line-height: 1.3;
+    }
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .green {
+      color: green;
+      font-weight: bold;
+    }
+    .red {
+      color: red;
+      font-weight: bold;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    .ok {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .ko {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .container {
+      display: flex;
+      gap: 40px;
+      margin-top: 20px;
+    }
+    .left {
+      flex: 3;
+    }
+    .right {
+      flex: 1;
+      background: #f0f0f0;
+      padding: 20px;
+      border-radius: 10px;
+      height: fit-content;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+    .right p {
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    ul.no-bullet {
+      list-style-type: none;
+      padding-left: 0;
+    }
+  </style>
 </head>
 <body>
-    <h1>🕒 Vérification de la continuité des horaires</h1>
+  <h2>📤 Déposez un fichier PDF ici</h2>
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept="application/pdf">
+    <input type="submit" value="Analyser">
+  </form>
+  <hr>
 
-    <form class="upload-form" action="/" method="post" enctype="multipart/form-data">
-        <label for="file">📤 Déposez un fichier PDF :</label>
-        <input type="file" name="file" required>
-        <button type="submit">Analyser</button>
-    </form>
-
-    {% if result %}
+  {% if start_guard %}
     <div class="container">
-        <div class="box">
-            <h2>🕒 Horaires extraits</h2>
-            <ul>
-                {% for start, end in result %}
-                    <li>Du {{ start.strftime('%d/%m/%Y %H:%M') }} au {{ end.strftime('%d/%m/%Y %H:%M') }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="box">
-            <h2>✔️ Vérification horaire par horaire</h2>
-            <ul>
-                {% for message in horaires_verification %}
-                    {% if '❌' in message %}
-                        <li class="error">{{ message }}</li>
-                    {% else %}
-                        <li class="ok">{{ message }}</li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-        </div>
+      <div class="left result">
+        <p><strong>🟢 Début :</strong> {{ start_guard.strftime('%d/%m/%Y %H:%M') }}</p>
+        <p><strong>🔴 Fin :</strong> {{ end_guard.strftime('%d/%m/%Y %H:%M') }}</p>
+        <p><strong>🕒 Durée théorique :</strong> {{ hours2 }}h {{ minutes2 }}m</p>
+        <p><strong>🕒 Durée mesurée :</strong> {{ hours }}h {{ minutes }}m</p>
+
+        <h4>Horaires extraits :</h4>
+        <ul>
+          {% for i in range(intervals|length) %}
+            <li style="color: {{ 'green' if verif_intervals[i] else 'red' }}; font-weight: bold;">
+              Du {{ intervals[i][0].strftime('%d/%m/%Y %H:%M') }} au {{ intervals[i][1].strftime('%d/%m/%Y %H:%M') }}
+              &nbsp;&nbsp;
+              <span>
+                {{ '✔️' if verif_intervals[i] else '❌' }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <h4>Cahier de GAV :</h4>
+        <ul class="no-bullet">          
+          {% for line in period_titles %}
+            <li>{{ line }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="right">
+        <h4>RESULTAT</h4>
+        <p style="color:{{ 'green' if verif2 else 'red' }};">
+          {{ '✔️ Durée OK' if verif2 else '❌ Durée incohérent' }}
+        </p>
+        <p style="color:{{ 'green' if verif1 else 'red' }};">
+          {{ '✔️ Horaires cohérents' if verif1 else '❌ Incohérence horaires' }}
+        </p>
+        <hr style="border: none; border-top: 1px solid #ccc; margin: 20px 0;">
+        <p style="color:{{ 'green' if global_verif else 'red' }};">
+          {{ '✔️ Aucun problème détecté ✔️' if global_verif else '❌ Problèmes détectés ❌' }}
+        </p>
+      </div>
     </div>
-    {% endif %}
+  {% elif result %}
+    {{ result|safe }}
+  {% endif %}
 </body>
 </html>
