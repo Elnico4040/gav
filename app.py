@@ -120,7 +120,7 @@ def index():
             verif1 = verification(intervals)
 
             if not intervals or not start_guard or not end_guard:
-                result = "<p style='color:red;'>Erreur : données incomplètes ou texte mal lu.</p>"
+                result = f"<p style='color:red;'>Erreur : données incomplètes ou texte mal lu {text} .</p>"
             else:
                 # Théorique
                 theorique_total = (intervals[-1][1] - intervals[0][0]).total_seconds()
