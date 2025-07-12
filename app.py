@@ -5,6 +5,8 @@ from datetime import datetime
 import PyPDF2
 import io
 from jinja2 import Environment
+from odf.opendocument import load
+from odf.text import P
 
 
 app = Flask(__name__)
@@ -21,8 +23,23 @@ def extract_text_from_pdf(file):
     text = re.sub(r"\s+", " ", text)
     return text
 
+def extract_text_from_odt(file):
+    try:
+        odt_doc = load(file)
+        all_paragraphs = odt_doc.getElementsByType(P)
+        text = " ".join([str(p.firstChild.data) for p in all_paragraphs if p.firstChild])
+        text = text.replace("'", "")
+        text = re.sub(r"\s+", " ", text)
+        return text
+    except Exception as e:
+        print("Erreur ODT :", e)
+        return ""
+
+
 def extract_time_ranges(text):
-    pattern = r"Du (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)? au (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)?"
+    #pattern = r"Du (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)? au (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)?"
+    #pattern = r"Du\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+à\s+(\d{1,2})\s+heure[s]?\s+(\d{1,2})\s+minute[s]?\s+au\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+à\s+(\d{1,2})\s+heure[s]?\s+(\d{1,2})\s+minute[s]?"
+    pattern = r"(?:Du|Le)\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+à\s+(\d{1,2})\s+heure[s]?\s+(\d{1,2})\s+minute[s]?\s+(?:au\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+à\s+(\d{1,2})\s+heure[s]?\s+(\d{1,2})\s+minute[s]?)?"
     matches = re.findall(pattern, text, re.IGNORECASE)
     mois_map = {"janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
         "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12}
@@ -50,17 +67,31 @@ def extract_start_guard_time(text):
     return None
 
 def extract_end_guard_time(text):
-    pattern = r"Le (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)?, il est mis fin à la garde à vue"
-    match = re.search(pattern, text, re.IGNORECASE)
-    mois_map = {"janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
-        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12}
-    if match:
-        d, m, y, h, mn = match.groups()
+    #pattern = r"Le (\d{1,2}) (\w+) (\d{4}) à (\d{1,2}) heure(?:s)? (\d{1,2}) minute(?:s)?, il est mis fin à la garde à vue"
+    pattern = r"Le\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+à\s+(\d{1,2})\s*heure(?:s)?\s*(\d{1,2})\s*minute(?:s)?\s*,?\s*il\s+est\s+mis\s+fin\s+à\s+la\s+garde\s+à\s+vue"
+    matches = re.findall(pattern, text, re.IGNORECASE)  
+    mois_map = {
+        "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
+        "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
+    }
+    for match in matches:
         try:
-            return datetime(int(y), mois_map[m.lower()], int(d), int(h), int(mn))
-        except Exception:
-            return None
-    return None
+            jour, mois_str, annee, heure, minute = match
+            jour = int(jour)
+            annee = int(annee)
+            heure = int(heure)
+            minute = int(minute) if minute else 0
+
+            mois = mois_map.get(mois_str.lower())
+            if mois is None:
+                continue  # mois non reconnu
+
+            return datetime(annee, mois, jour, heure, minute)
+        except Exception as e:
+            print("Erreur de parsing :", e)
+            continue
+
+    return None  # Aucun résultat valide
 
 def extract_periods_with_titles(text):
     pattern = r"(Du \d{1,2} \w+ \d{4} à \d{1,2} heure[s]? \d{1,2} minute[s]? au \d{1,2} \w+ \d{4} à \d{1,2} heure[s]? \d{1,2} minute[s]?)"
@@ -91,6 +122,7 @@ def index():
     result = ""
     start_guard = None
     end_guard = None
+    text = None
     intervals = []
     period_titles = []
     verif1 = 0
@@ -102,7 +134,16 @@ def index():
     if request.method == "POST":
         file = request.files.get("file")
         if file:
-            text = extract_text_from_pdf(io.BytesIO(file.read()))
+            filename = file.filename.lower()
+            content = io.BytesIO(file.read())
+
+            if filename.endswith(".pdf"):
+                text = extract_text_from_pdf(content)
+            elif filename.endswith(".odt"):
+                text = extract_text_from_odt(content)
+            else:
+                result = "<p style='color:red;'>Format non supporté. Veuillez déposer un fichier PDF ou ODT.</p>"
+
             intervals = extract_time_ranges(text)
             start_guard = extract_start_guard_time(text)
             end_guard = extract_end_guard_time(text)
@@ -110,18 +151,26 @@ def index():
 
             verif1 = verification(intervals)
 
-            if not intervals or not start_guard or not end_guard:
+
+            if not intervals or not start_guard:
+            # S'il manque start_guard ou intervals, on ne peut pas faire de calcul complet
                 result = "<p style='color:red;'>Erreur : données incomplètes ou texte mal lu.</p>"
             else:
                 theorique_total = (intervals[-1][1] - intervals[0][0]).total_seconds()
                 hours = int(theorique_total // 3600)
                 minutes = int((theorique_total % 3600) // 60)
 
-                total_seconds = int((end_guard - start_guard).total_seconds())
-                hours2 = total_seconds // 3600
-                minutes2 = (total_seconds % 3600) // 60
+                if end_guard is not None:
+                    total_seconds = int((end_guard - start_guard).total_seconds())
+                    hours2 = total_seconds // 3600
+                    minutes2 = (total_seconds % 3600) // 60
 
-                verif2 = 1 if (hours == hours2 and minutes == minutes2) else 0
+                    verif2 = 1 if (hours == hours2 and minutes == minutes2) else 0
+                else:
+                    #   Pas d'heure de fin, on ne peut pas vérifier la durée théorique, on considère ça OK (ou neutre)
+                    hours2 = minutes2 = None
+                    verif2 = 1
+
                 global_verif = verif1 and verif2
 
                 # Calcul de la vérification horaire entre chaque intervalle (heure par heure)
@@ -133,6 +182,7 @@ def index():
                         prev_end = intervals[i-1][1]
                         current_start = intervals[i][0]
                         verif_intervals.append(prev_end == current_start)
+
     return render_template("index.html",
                            result=result,
                            start_guard=start_guard,
@@ -146,7 +196,9 @@ def index():
                            global_verif=global_verif,
                            intervals=intervals,
                            period_titles=period_titles,
-                           verif_intervals=verif_intervals)
+                           verif_intervals=verif_intervals,
+                           text=text)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
