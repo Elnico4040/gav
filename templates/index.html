@@ -26,7 +26,6 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
     input[type="submit"]:hover {
       background-color: #2980b9;
     }
@@ -56,20 +55,6 @@
       color: red;
       font-weight: bold;
     }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 8px;
-      font-size: 12px;
-    }
-    .ok {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    .ko {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
     .container {
       display: flex;
       gap: 40px;
@@ -94,32 +79,72 @@
       list-style-type: none;
       padding-left: 0;
     }
+    pre.extracted-text {
+      white-space: pre-wrap;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
+
   <h2>📤 Déposez un fichier PDF ici</h2>
   <form method="post" enctype="multipart/form-data">
-    <input type="file" name="file" accept="application/pdf">
+    <input type="file" name="file" accept=".pdf,.odt,application/pdf,application/vnd.oasis.opendocument.text">
     <input type="submit" value="Analyser">
   </form>
   <hr>
 
-  {% if start_guard %}
+  {% if start_guard or end_guard %}
     <div class="container">
       <div class="left result">
-        <p><strong>🟢 Début :</strong> {{ start_guard.strftime('%d/%m/%Y %H:%M') }}</p>
-        <p><strong>🔴 Fin :</strong> {{ end_guard.strftime('%d/%m/%Y %H:%M') }}</p>
-        <p><strong>🕒 Durée théorique :</strong> {{ hours2 }}h {{ minutes2 }}m</p>
-        <p><strong>🕒 Durée mesurée :</strong> {{ hours }}h {{ minutes }}m</p>
+
+        {% if start_guard %}
+          <p><strong>🟢 Début :</strong> {{ start_guard.strftime('%d/%m/%Y %H:%M') }}</p>
+        {% else %}
+          <p><strong>🟢 Début :</strong> Non détecté</p>
+        {% endif %}
+
+        {% if end_guard %}
+          <p><strong>🔴 Fin :</strong> {{ end_guard.strftime('%d/%m/%Y %H:%M') }}</p>
+        {% else %}
+          <p><strong>🔴 Fin :</strong> Non détectée</p>
+        {% endif %}
+
+        {% if hours2 is not none and minutes2 is not none %}
+          <p><strong>🕒 Durée théorique :</strong> {{ hours2 }}h {{ minutes2 }}m</p>
+        {% endif %}
+
+        {% if hours is not none and minutes is not none %}
+          <p><strong>🕒 Durée mesurée :</strong> {{ hours }}h {{ minutes }}m</p>
+        {% endif %}
 
         <h4>Horaires extraits :</h4>
         <ul>
           {% for i in range(intervals|length) %}
-            <li style="color: {{ 'green' if verif_intervals[i] else 'red' }}; font-weight: bold;">
-              Du {{ intervals[i][0].strftime('%d/%m/%Y %H:%M') }} au {{ intervals[i][1].strftime('%d/%m/%Y %H:%M') }}
+            {% set start = intervals[i][0] %}
+            {% set end = intervals[i][1] %}
+            {% set is_valid = verif_intervals[i] %}
+
+            <li style="color: {{ 'green' if is_valid else 'red' }}; font-weight: bold;">
+              Du 
+              {% if start %}
+                {{ start.strftime('%d/%m/%Y %H:%M') }}
+              {% else %}
+                [début non détecté]
+              {% endif %}
+              au 
+              {% if end %}
+                {{ end.strftime('%d/%m/%Y %H:%M') }}
+              {% else %}
+                [fin non détectée]
+              {% endif %}
               &nbsp;&nbsp;
               <span>
-                {{ '✔️' if verif_intervals[i] else '❌' }}
+                {{ '✔️' if is_valid else '❌' }}
               </span>
             </li>
           {% endfor %}
@@ -136,7 +161,7 @@
       <div class="right">
         <h4>RESULTAT</h4>
         <p style="color:{{ 'green' if verif2 else 'red' }};">
-          {{ '✔️ Durée OK' if verif2 else '❌ Durée incohérent' }}
+          {{ '✔️ Durée OK' if verif2 else '❌ Durée incohérente' }}
         </p>
         <p style="color:{{ 'green' if verif1 else 'red' }};">
           {{ '✔️ Horaires cohérents' if verif1 else '❌ Incohérence horaires' }}
@@ -147,8 +172,19 @@
         </p>
       </div>
     </div>
-  {% elif result %}
+  {% endif %}
+
+  {% if text %}
+    <hr>
+    <div class="result">
+      <h4>📄 Texte extrait du PDF :</h4>
+      <pre class="text">{{ text }}</pre>
+    </div>
+  {% endif %}
+
+  {% if result %}
     {{ result|safe }}
   {% endif %}
+
 </body>
 </html>
