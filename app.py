@@ -20,6 +20,7 @@ def extract_text_from_pdf(file):
         if page_text:
             text += " " + page_text
     text = text.replace("'", "")
+    text = re.sub(r'\b[sS]\b', '', text)
     text = re.sub(r"\s+", " ", text)
     return text
 
@@ -94,19 +95,29 @@ def extract_end_guard_time(text):
     return None  # Aucun résultat valide
 
 def extract_periods_with_titles(text):
-    pattern = r"(Du \d{1,2} \w+ \d{4} à \d{1,2} heure[s]? \d{1,2} minute[s]? au \d{1,2} \w+ \d{4} à \d{1,2} heure[s]? \d{1,2} minute[s]?)"
+    # Pattern pour extraire les périodes
+    pattern = r"((?:Du|Le)\s+\d{1,2}\s+\w+\s+\d{4}\s+à\s+\d{1,2}\s+heure[s]?\s+\d{1,2}\s+minute[s]?\s+au\s+\d{1,2}\s+\w+\s+\d{4}\s+à\s+\d{1,2}\s+heure[s]?\s+\d{1,2}\s+minute[s]?)"
+
+    # Extraction des titres en majuscules (au moins 4 lettres)
     titles = list(re.finditer(r"\b([A-ZÉÈÀÙÂÊÎÔÛÄËÏÖÜÇ' ]{4,})\b", text))
+
+    # Extraction des périodes complètes avec position
     periods = list(re.finditer(pattern, text))
+
     results = []
     for period_match in periods:
-        period_text = period_match.group(1)
+        period_text = period_match.group(1).strip()
         period_start = period_match.start()
+
+        # Chercher le titre le plus proche avant cette période
         closest_title = "TITRE NON TROUVÉ"
         for title_match in reversed(titles):
             if title_match.start() < period_start:
                 closest_title = title_match.group(1).strip()
                 break
+
         results.append(f"{period_text} : {closest_title.title()}")
+
     return results
 
 def verification(intervals):
@@ -117,8 +128,16 @@ def verification(intervals):
             return 0
     return 1
 
-@app.route("/", methods=["GET", "POST"])
-def index():
+@app.route("/")
+def home():
+    return render_template("home.html")
+
+@app.route("/tuto", methods=["GET", "POST"])
+def tuto():
+    return render_template("tuto.html")
+
+@app.route("/periodes-validees", methods=["GET", "POST"])
+def periodes_validees():
     result = ""
     start_guard = None
     end_guard = None
