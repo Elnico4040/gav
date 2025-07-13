@@ -87,17 +87,44 @@
       border: 1px solid #ccc;
       font-family: monospace;
     }
+        /* Bouton retour en haut à gauche */
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #3498db;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+      z-index: 1000;
+    }
+    .back-button:hover {
+      background-color: #2980b9;
+    }
+    header {
+      background-color: #ffffff;
+      color: rgb(0, 0, 0);
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 40px; /* espace sous le header */
+    }
   </style>
 </head>
 <body>
-
-  <h2>📤 Déposez un fichier PDF ici</h2>
-  <form method="post" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".pdf,.odt,application/pdf,application/vnd.oasis.opendocument.text">
-    <input type="submit" value="Analyser">
-  </form>
-  <hr>
-
+  <header>
+    <a href="{{ url_for('home') }}" class="back-button">← Accueil</a>
+    <h2>📤 Déposez un fichier PDF ici</h2>
+    <form method="post" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".pdf,.odt,application/pdf,application/vnd.oasis.opendocument.text">
+      <input type="submit" value="Analyser">
+    </form>
+    <hr>
+  </header>
   {% if start_guard or end_guard %}
     <div class="container">
       <div class="left result">
@@ -178,7 +205,7 @@
     <hr>
     <div class="result">
       <h4>📄 Texte extrait du PDF :</h4>
-      <pre class="text">{{ text }}</pre>
+      <div class="text">{{ text.replace('\n', '<br>') | safe }}</div>
     </div>
   {% endif %}
 
@@ -186,5 +213,9 @@
     {{ result|safe }}
   {% endif %}
 
+
+  <footer>
+    © 2025 - Application V1.0.
+  </footer>
 </body>
 </html>
