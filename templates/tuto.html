@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tutoriel - Utilisation de l'application</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(120deg, #f0f4f8, #d9e2ec);
+      color: #333;
+    }
+
+    /* Bouton retour en haut à gauche */
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #3498db;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+      z-index: 1000;
+    }
+    .back-button:hover {
+      background-color: #2980b9;
+    }
+
+    header {
+      background-color: #3498db;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 40px; /* espace sous le header */
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-top: 20px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    .step {
+      margin-bottom: 30px;
+    }
+
+    .step-number {
+      background-color: #3498db;
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Bouton Retour -->
+  <a href="{{ url_for('home') }}" class="back-button">← Accueil</a>
+
+  <header>
+    <h1>📘 Tutoriel d'utilisation</h1>
+    <p>Apprenez à utiliser notre application pas à pas</p>
+  </header>
+
+  <div class="container">
+    <div class="step">
+      <h2><span class="step-number">1</span>Charger un fichier PDF</h2>
+      <p>Cliquez sur le bouton "Importer" depuis la page d’accueil et sélectionnez votre fichier PDF contenant la notification des droits.</p>
+      <p>Pour éviter les erreurs, exportez directement le procès-verbal de formats ODT en format PDF. Cette fonctionnalité est disponible dans LibreOffice.</p>
+    </div>
+
+    <div class="step">
+      <h2><span class="step-number">2</span>Lancer la vérification</h2>
+      <p>Une fois le fichier chargé, cliquez sur "Analyser".</p>
+    </div>
+
+    <div class="step">
+      <h2><span class="step-number">3</span>Consulter les résultats</h2>
+      <p>Les périodes valides et les éventuelles erreurs s'afficheront.</p>
+      <p>Vous avez accès aux titres de chaque périodes, pouvez utiliser cette partie pour copier coller le resultats</p>
+      <p class="centered"><strong>⚠️ Attention : les résultats peuvent être incorrects. Veuillez toujours vérifier visuellement votre procès-verbal. Cette application est fournie uniquement à titre d’aide. ⚠️</strong></p>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 - Application V1.0.
+  </footer>
+
+</body>
+</html>
+
