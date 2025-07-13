@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Accueil - Vérification des périodes</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* Centrage vertical */
+      align-items: center;     /* Centrage horizontal */
+      background-color: #f8f9fa;
+      text-align: center;
+    }
+
+    h1 {
+      color: #343a40;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 30px;
+      color: #555;
+    }
+
+    button {
+      background: #3498db;
+      color: #fff;
+      border: none;
+      width: 240px;           /* Largeur fixe pour tous les boutons */
+      height: 60px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: 800ms ease all;
+      outline: none;
+      position: relative;
+      margin: 10px 0;         /* Espacement entre les boutons */
+      text-align: center;
+      padding: 0;
+    }
+
+    button:hover {
+      background: #fff;
+      color: #3498db;
+    }
+
+    button:before, button:after {
+      content: '';
+      position: absolute;
+      height: 2px;
+      width: 0;
+      background: #3498db;
+      transition: 400ms ease all;
+    }
+
+    button:before {
+      top: 0;
+      right: 0;
+    }
+
+    button:after {
+      bottom: 0;
+      left: 0;
+    }
+
+    button:hover:before,
+    button:hover:after {
+      width: 100%;
+    }
+
+    button a {
+      display: block;
+      width: 100%;
+      height: 100%;
+      line-height: 60px;
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bienvenue sur l'application de vérification</h1>
+  <p>Cette application permet de vérifier la cohérence des horaires dans un fichier PDF.</p>
+
+  <button><a href="{{ url_for('periodes_validees') }}">🔎 VERIFICATION</a></button>
+  <button><a href="{{ url_for('tuto') }}">💡 TUTORIEL</a></button>
+  <button><a href="{{ url_for('periodes_validees') }}">📊 CALCULER</a></button>
+  
+    <footer>
+    © 2025 - Application V1.0.
+  </footer>
+</body>
+</html>
