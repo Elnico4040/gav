@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>versions</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .version {
+      border-left: 5px solid #3498db;
+      padding-left: 15px;
+      margin-bottom: 30px;
+    }
+
+    .version h2 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .date {
+      font-size: 0.9em;
+      color: #777;
+      margin-bottom: 10px;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9em;
+      color: #999;
+    }
+
+    a.retour {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      text-decoration: none;
+      color: white;
+      background-color: #3498db;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 0.9em;
+    }
+
+    a.retour:hover {
+      background-color: #2980b9;
+    }
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #3498db;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+      z-index: 1000;
+    }
+    .back-button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="{{ url_for('home') }}" class="back-button">← Accueil</a>
+    <h1>📜 Historique des versions</h1>
+  </header>
+
+  <div class="container">
+
+    <div class="version">
+      <h2>Version 1.1</h2>
+      <div class="date">24 juillet 2025</div>
+      <ul>
+        <li>Ajout de l'historique des versions</li>
+        <li>Ajout de la page calcul</li>
+      </ul>
+    </div>
+
+    <div class="version">
+      <h2>Version 1.0</h2>
+      <div class="date">10 juillet 2025</div>
+      <ul>
+        <li>Première version du site avec import de PDF</li>
+        <li>Extraction des périodes horaires</li>
+        <li>Vérification de la cohérence horaire</li>
+        <li>Ajout du tutoriel</li>
+        <li>Ajout d'une page d'accueil</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <footer>
+    © 2025 - Application V1.1.
+  </footer>
+
+</body>
+</html>
