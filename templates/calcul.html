@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CALCUL</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(120deg, #f0f4f8, #d9e2ec);
+      color: #333;
+    }
+
+    .date-card {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+
+    .date-card label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .date-card input[type="datetime-local"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .date-card input[type="datetime-local"]:focus {
+      outline: none;
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    /* Bouton retour en haut à gauche */
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #3498db;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+      z-index: 1000;
+    }
+    .back-button:hover {
+      background-color: #2980b9;
+    }
+
+    header {
+      background-color: #3498db;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 40px; /* espace sous le header */
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-top: 20px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    .step {
+      margin-bottom: 30px;
+    }
+
+    .step-number {
+      background-color: #3498db;
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+      font-size: 0.9em;
+    }
+    .btn-calcul {
+    background-color: #3498db;     /* bleu doux */
+    color: white;                  /* texte blanc */
+    padding: 12px 24px;            /* espace intérieur */
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;            /* coins arrondis */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+    }
+
+    .btn-calcul:hover {
+        background-color: #2980b9;
+        transform: scale(1.03);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Bouton Retour -->
+  <a href="{{ url_for('home') }}" class="back-button">← Accueil</a>
+
+  <header>
+    <h1>📊 Calcul de durée</h1>
+    <p>Calculer le nombre d'heure entre deux périodes</p>
+  </header>
+
+  <div class="container">
+    <div class="step">
+       <form method="POST">
+            <div class="date-card">
+                <div class="form-group">
+                    <label for="date1">Période de début :</label>
+                    <input type="datetime-local" id="date1" name="date1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="date2">Période de fin :</label>
+                    <input type="datetime-local" id="date2" name="date2" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn-calcul">Calculer</button>
+                </div>
+            </div>
+
+        </form>
+
+        {% if resultat %}
+            <p><strong>Résultat :</strong> {{ resultat }}</p>
+        {% endif %}
+    </div>
+  </div>
+
+  <footer>
+    © 2025 - Application V1.1.
+  </footer>
+
+</body>
+</html>
+
