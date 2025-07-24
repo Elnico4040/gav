@@ -128,6 +128,7 @@ def verification(intervals):
             return 0
     return 1
 
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -135,6 +136,34 @@ def home():
 @app.route("/tuto", methods=["GET", "POST"])
 def tuto():
     return render_template("tuto.html")
+
+@app.route("/ver", methods=["GET", "POST"])
+def ver():
+    return render_template("ver.html")
+
+@app.route("/calcul", methods=["GET", "POST"])
+def calcul():
+    resultat = None
+    if request.method == "POST":
+        try:
+            # Récupération des données du formulaire
+            date1 = request.form.get("date1")
+            date2 = request.form.get("date2")
+            
+            # Conversion des chaînes en datetime
+            debut = datetime.strptime(date1, "%Y-%m-%dT%H:%M")
+            fin = datetime.strptime(date2, "%Y-%m-%dT%H:%M")
+
+            # Calcul de la durée
+            delta = fin - debut
+            total_minutes = delta.total_seconds() // 60
+            heures = int(total_minutes // 60)
+            minutes = int(total_minutes % 60)
+            resultat = f"{heures} heures et {minutes} minutes"
+        except Exception as e:
+            resultat = "Erreur dans la saisie des dates."
+
+    return render_template("calcul.html", resultat=resultat)
 
 @app.route("/periodes-validees", methods=["GET", "POST"])
 def periodes_validees():
@@ -171,23 +200,24 @@ def periodes_validees():
             verif1 = verification(intervals)
 
 
-            if not intervals or not start_guard:
-            # S'il manque start_guard ou intervals, on ne peut pas faire de calcul complet
+            if not intervals :
+            # S'il manque intervals, on ne peut pas faire de calcul complet
                 result = "<p style='color:red;'>Erreur : données incomplètes ou texte mal lu.</p>"
             else:
-                theorique_total = (intervals[-1][1] - intervals[0][0]).total_seconds()
-                hours = int(theorique_total // 3600)
-                minutes = int((theorique_total % 3600) // 60)
 
-                if end_guard is not None:
+                if end_guard and start_guard is not None:
                     total_seconds = int((end_guard - start_guard).total_seconds())
                     hours2 = total_seconds // 3600
                     minutes2 = (total_seconds % 3600) // 60
+                    theorique_total = (intervals[-1][1] - intervals[0][0]).total_seconds()
+                    hours = int(theorique_total // 3600)
+                    minutes = int((theorique_total % 3600) // 60)
 
                     verif2 = 1 if (hours == hours2 and minutes == minutes2) else 0
                 else:
                     #   Pas d'heure de fin, on ne peut pas vérifier la durée théorique, on considère ça OK (ou neutre)
                     hours2 = minutes2 = None
+                    hours = minutes = None
                     verif2 = 1
 
                 global_verif = verif1 and verif2
